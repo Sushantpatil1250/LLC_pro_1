@@ -1,0 +1,254 @@
+import random
+import time
+import json
+import os
+
+# Questions database
+questions = [
+    {
+        "question": "What is the output of print(2 + 3) in Python?",
+        "options": ["5", "23", "Error", "None"],
+        "answer": "5",
+        "difficulty": "easy"
+    },
+    {
+        "question": "Which keyword is used to define a function in Python?",
+        "options": ["func", "def", "function", "define"],
+        "answer": "def",
+        "difficulty": "easy"
+    },
+    {
+        "question": "What does 'len()' function do in Python?",
+        "options": ["Length of string", "Length of list", "Both A and B", "None"],
+        "answer": "Both A and B",
+        "difficulty": "easy"
+    },
+    {
+        "question": "What is the correct way to create a list in Python?",
+        "options": ["list = []", "list = {}", "list = ()", "list = <>"],
+        "answer": "list = []",
+        "difficulty": "easy"
+    },
+    {
+        "question": "Which of these is not a Python data type?",
+        "options": ["int", "str", "float", "char"],
+        "answer": "char",
+        "difficulty": "easy"
+    },
+    {
+        "question": "How do you start a comment in Python?",
+        "options": ["//", "#", "/*", "--"],
+        "answer": "#",
+        "difficulty": "easy"
+    },
+    {
+        "question": "What is the result of 10 // 3 in Python?",
+        "options": ["3.33", "3", "4", "Error"],
+        "answer": "3",
+        "difficulty": "medium"
+    },
+    {
+        "question": "Which method is used to add an element to a list?",
+        "options": ["add()", "append()", "insert()", "push()"],
+        "answer": "append()",
+        "difficulty": "medium"
+    },
+    {
+        "question": "What does 'if __name__ == '__main__':' do?",
+        "options": ["Runs code only if file is executed directly", "Imports main module", "Defines main function", "None"],
+        "answer": "Runs code only if file is executed directly",
+        "difficulty": "medium"
+    },
+    {
+        "question": "How do you handle exceptions in Python?",
+        "options": ["try-except", "catch-throw", "handle-error", "except-try"],
+        "answer": "try-except",
+        "difficulty": "medium"
+    },
+    {
+        "question": "What is a lambda function in Python?",
+        "options": ["Anonymous function", "Named function", "Built-in function", "Class method"],
+        "answer": "Anonymous function",
+        "difficulty": "medium"
+    },
+    {
+        "question": "Which library is used for data analysis in Python?",
+        "options": ["numpy", "pandas", "matplotlib", "All of the above"],
+        "answer": "All of the above",
+        "difficulty": "medium"
+    },
+    {
+        "question": "What is the time complexity of binary search?",
+        "options": ["O(n)", "O(log n)", "O(n^2)", "O(1)"],
+        "answer": "O(log n)",
+        "difficulty": "hard"
+    },
+    {
+        "question": "What does 'self' refer to in a class method?",
+        "options": ["The class", "The instance", "The method", "None"],
+        "answer": "The instance",
+        "difficulty": "hard"
+    },
+    {
+        "question": "Which of these is not a Python framework?",
+        "options": ["Django", "Flask", "React", "FastAPI"],
+        "answer": "React",
+        "difficulty": "hard"
+    },
+    {
+        "question": "What is the purpose of __init__ method?",
+        "options": ["Initialize instance", "Delete instance", "Copy instance", "None"],
+        "answer": "Initialize instance",
+        "difficulty": "hard"
+    },
+    {
+        "question": "How do you create a dictionary in Python?",
+        "options": ["dict = {}", "dict = []", "dict = ()", "dict = <>"],
+        "answer": "dict = {}",
+        "difficulty": "medium"
+    },
+    {
+        "question": "What is the output of bool('False') in Python?",
+        "options": ["True", "False", "Error", "None"],
+        "answer": "True",
+        "difficulty": "hard"
+    }
+]
+
+# Timer settings for each difficulty (in seconds)
+timers = {
+    "easy": 15,
+    "medium": 10,
+    "hard": 8
+}
+
+# Points for each difficulty
+points = {
+    "easy": 10,
+    "medium": 20,
+    "hard": 30
+}
+
+# Leaderboard file
+LEADERBOARD_FILE = "leaderboard.json"
+
+def load_leaderboard():
+    if os.path.exists(LEADERBOARD_FILE):
+        with open(LEADERBOARD_FILE, 'r') as f:
+            return json.load(f)
+    return []
+
+def save_leaderboard(leaderboard):
+    with open(LEADERBOARD_FILE, 'w') as f:
+        json.dump(leaderboard, f, indent=4)
+
+def show_leaderboard():
+    leaderboard = load_leaderboard()
+    if not leaderboard:
+        print("No scores yet!")
+        return
+    
+    print("\n--- LEADERBOARD ---")
+    for i, entry in enumerate(sorted(leaderboard, key=lambda x: x['score'], reverse=True)[:10], 1):
+        print(f"{i}. {entry['name']}: {entry['score']} points")
+    print()
+
+def get_questions_by_difficulty(difficulty):
+    return [q for q in questions if q['difficulty'] == difficulty]
+
+def ask_question(question, timer_limit):
+    print(f"\n{question['question']}")
+    for i, option in enumerate(question['options'], 1):
+        print(f"{i}. {option}")
+    
+    start_time = time.time()
+    try:
+        answer = input("Your answer (1-4): ").strip()
+        elapsed = time.time() - start_time
+        
+        if elapsed > timer_limit:
+            print(f"Time's up! ({elapsed:.1f}s > {timer_limit}s)")
+            return False, 0
+        
+        if answer.isdigit() and 1 <= int(answer) <= 4:
+            selected = question['options'][int(answer) - 1]
+            if selected == question['answer']:
+                bonus = max(0, int((timer_limit - elapsed) / timer_limit * 5))  # Bonus points for speed
+                return True, bonus
+            else:
+                print(f"Wrong! Correct answer: {question['answer']}")
+                return False, 0
+        else:
+            print("Invalid input!")
+            return False, 0
+    except KeyboardInterrupt:
+        print("\nQuestion skipped.")
+        return False, 0
+
+def play_game():
+    print("Welcome to the Quiz Game!")
+    print("Choose difficulty: easy, medium, hard")
+    difficulty = input("Difficulty: ").strip().lower()
+    
+    if difficulty not in timers:
+        print("Invalid difficulty. Defaulting to easy.")
+        difficulty = "easy"
+    
+    game_questions = get_questions_by_difficulty(difficulty)
+    if not game_questions:
+        print("No questions available for this difficulty.")
+        return
+    
+    random.shuffle(game_questions)
+    timer_limit = timers[difficulty]
+    base_points = points[difficulty]
+    
+    score = 0
+    correct_answers = 0
+    
+    print(f"\nStarting {difficulty} quiz with {len(game_questions)} questions.")
+    print(f"You have {timer_limit} seconds per question.")
+    
+    for i, q in enumerate(game_questions, 1):
+        print(f"\nQuestion {i}/{len(game_questions)}")
+        correct, bonus = ask_question(q, timer_limit)
+        if correct:
+            score += base_points + bonus
+            correct_answers += 1
+            print(f"Correct! +{base_points + bonus} points (bonus: {bonus})")
+        else:
+            print(f"Incorrect. +0 points")
+        print(f"Current score: {score}")
+    
+    print(f"\nGame Over!")
+    print(f"Correct answers: {correct_answers}/{len(game_questions)}")
+    print(f"Final score: {score}")
+    
+    # Save to leaderboard
+    name = input("Enter your name for the leaderboard: ").strip()
+    if name:
+        leaderboard = load_leaderboard()
+        leaderboard.append({"name": name, "score": score})
+        save_leaderboard(leaderboard)
+        print("Score saved!")
+    
+    show_leaderboard()
+
+def main():
+    while True:
+        print("\n1. Play Game")
+        print("2. View Leaderboard")
+        print("3. Exit")
+        choice = input("Choose: ").strip()
+        
+        if choice == "1":
+            play_game()
+        elif choice == "2":
+            show_leaderboard()
+        elif choice == "3":
+            break
+        else:
+            print("Invalid choice.")
+
+if __name__ == "__main__":
+    main()
