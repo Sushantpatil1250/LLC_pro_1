@@ -14,7 +14,7 @@ Quiz Game is a console-based application developed using Python. It allows users
 - Python
 - Libraries: `random`, `time`, `json`, `os`
 
-## ▶️ How to Run
+## ▶️  How to Run
 1. Clone the repository
 2. Open terminal in project folder
 3. Run the program:
